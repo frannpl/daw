@@ -75,4 +75,101 @@ public class TareaControllers {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
 		}
 	}
+	
+	@PutMapping("/{idTarea}/iniciar")
+	public ResponseEntity<?> iniciarTarea(@PathVariable int idTarea) {
+		try {
+			Tarea tarea = tareaService.findById(idTarea);
+			if (tarea.getEstado() != Estado.PENDIENTE) {
+				return ResponseEntity.status(HttpStatus.CONFLICT).body("Solo se pueden iniciar tareas PENDIENTES.");
+			}
+			tarea.setEstado(Estado.EN_PROGRESO);
+			return ResponseEntity.ok(tareaService.create(tarea)); 
+		} catch (TareaNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		}
+	}
+	
+	@PutMapping("/{idTarea}/completar")
+	public ResponseEntity<?> completarTarea(@PathVariable int idTarea) {
+		try {
+			Tarea tarea = tareaService.findById(idTarea);
+			if (tarea.getEstado() != Estado.EN_PROGRESO) {
+				return ResponseEntity.status(HttpStatus.CONFLICT).body("Solo se pueden completar tareas EN PROGRESO.");
+			}
+			tarea.setEstado(Estado.COMPLETADA);
+			return ResponseEntity.ok(tareaService.create(tarea)); 
+		} catch (TareaNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		}
+		
+	}
+	
+	@GetMapping("/pendientes")
+	public ResponseEntity<List<Tarea>> getTareasPendientes() {
+		List<Tarea> resultado = new ArrayList<>();
+		for (Tarea tarea : tareaService.findAll()) {
+			if (tarea.getEstado() == Estado.PENDIENTE) {
+				resultado.add(tarea);
+			}
+		}
+		return ResponseEntity.ok(resultado);
+	}
+	
+	@GetMapping("/en-progreso")
+	public ResponseEntity<List<Tarea>> getTareasEnProgreso() {
+		List<Tarea> resultado = new ArrayList<>();
+		for (Tarea tarea : tareaService.findAll()) {
+			if (tarea.getEstado() == Estado.EN_PROGRESO) {
+				resultado.add(tarea);
+			}
+		}
+		return ResponseEntity.ok(resultado);
+	}
+	
+	@GetMapping("/completadas")
+	public ResponseEntity<List<Tarea>> getTareasCompletadas() {
+		List<Tarea> resultado = new ArrayList<>();
+		for (Tarea tarea : tareaService.findAll()) {
+			if (tarea.getEstado() == Estado.COMPLETADA) {
+				resultado.add(tarea);
+			}
+		}
+		return ResponseEntity.ok(resultado);
+	}
+	
+	@GetMapping("/vencidas")
+	public ResponseEntity<List<Tarea>> getTareasVencidas() {
+		List<Tarea> resultado = new ArrayList<>();
+		LocalDate hoy = LocalDate.now();
+		for (Tarea tarea : tareaService.findAll()) {
+			if (tarea.getFechaVencimiento().isBefore(hoy)) {
+				resultado.add(tarea);
+			}
+		}
+		return ResponseEntity.ok(resultado);
+	}
+	
+	@GetMapping("/no-vencidas")
+	public ResponseEntity<List<Tarea>> getTareasNoVencidas() {
+		List<Tarea> resultado = new ArrayList<>();
+		LocalDate hoy = LocalDate.now();
+		for (Tarea tarea : tareaService.findAll()) {
+			if (tarea.getFechaVencimiento().isAfter(hoy) || tarea.getFechaVencimiento().isEqual(hoy)) {
+				resultado.add(tarea);
+			}
+		}
+		return ResponseEntity.ok(resultado);
+	}
+	
+	@GetMapping("/buscar/{titulo}")
+	public ResponseEntity<List<Tarea>> buscarPorTitulo(@PathVariable String titulo) {
+		List<Tarea> resultado = new ArrayList<>();
+		for (Tarea tarea : tareaService.findAll()) {
+			if (tarea.getTitulo().toLowerCase().contains(titulo.toLowerCase())) {
+				resultado.add(tarea);
+			}
+		}
+		return ResponseEntity.ok(resultado);
+	}
 }

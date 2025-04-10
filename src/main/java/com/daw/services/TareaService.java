@@ -51,6 +51,10 @@ public class TareaService {
 		tarea.setFechaCreacion(LocalDate.now());
 		tarea.setEstado(Estado.PENDIENTE);
 		
+		if(tarea.getFechaVencimiento() == null || !tarea.getFechaVencimiento().isAfter(LocalDate.now())) {
+			throw new TareaException("La fecha de vencimiento debe ser posterior a la de creación");
+		}
+		
 		return this.tareaRepository.save(tarea);
 	}
 	
@@ -68,6 +72,11 @@ public class TareaService {
 		}
 		
 		Tarea tareaBD = this.findById(tarea.getId());
+		
+		if(tarea.getFechaVencimiento() == null || !tarea.getFechaVencimiento().isAfter(tareaBD.getFechaCreacion())) {
+			throw new TareaException("La fecha de vencimiento debee ser posterior a la fecha de creación");
+		}
+		
 		tareaBD.setTitulo(tarea.getTitulo());
 		tareaBD.setDescripcion(tarea.getDescripcion());
 		tareaBD.setFechaVencimiento(tarea.getFechaVencimiento());
@@ -165,4 +174,27 @@ public class TareaService {
 		public List<Tarea> ordenadasFechaVencimiento(){
 			return this.tareaRepository.findAllByOrderByFechaVencimiento();
 		}
+		
+		public Tarea iniciarTarea(int idTarea) {
+			Tarea tarea = this.findById(idTarea);
+
+			if (tarea.getEstado() != Estado.PENDIENTE) {
+				throw new TareaException("Solo se puede iniciar una tarea que este en estado PENDIENTE.");
+			}
+
+			tarea.setEstado(Estado.EN_PROGRESO);
+			return this.tareaRepository.save(tarea);
+		}
+
+		public Tarea completarTarea(int idTarea) {
+			Tarea tarea = this.findById(idTarea);
+
+			if (tarea.getEstado() != Estado.EN_PROGRESO) {
+				throw new TareaException("Solo se puede completar una tarea que este EN_PROGRESO.");
+			}
+
+			tarea.setEstado(Estado.COMPLETADA);
+			return this.tareaRepository.save(tarea);
+		}
+
 }
