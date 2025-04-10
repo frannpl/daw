@@ -79,97 +79,54 @@ public class TareaControllers {
 	@PutMapping("/{idTarea}/iniciar")
 	public ResponseEntity<?> iniciarTarea(@PathVariable int idTarea) {
 		try {
-			Tarea tarea = tareaService.findById(idTarea);
-			if (tarea.getEstado() != Estado.PENDIENTE) {
-				return ResponseEntity.status(HttpStatus.CONFLICT).body("Solo se pueden iniciar tareas PENDIENTES.");
-			}
-			tarea.setEstado(Estado.EN_PROGRESO);
-			return ResponseEntity.ok(tareaService.create(tarea)); 
+			Tarea tareaActualizada = tareaService.iniciarTarea(idTarea);
+			return ResponseEntity.ok(tareaActualizada);
 		} catch (TareaNotFoundException e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		} catch (TareaException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
 		}
 	}
-	
+
 	@PutMapping("/{idTarea}/completar")
 	public ResponseEntity<?> completarTarea(@PathVariable int idTarea) {
 		try {
-			Tarea tarea = tareaService.findById(idTarea);
-			if (tarea.getEstado() != Estado.EN_PROGRESO) {
-				return ResponseEntity.status(HttpStatus.CONFLICT).body("Solo se pueden completar tareas EN PROGRESO.");
-			}
-			tarea.setEstado(Estado.COMPLETADA);
-			return ResponseEntity.ok(tareaService.create(tarea)); 
+			Tarea tareaActualizada = tareaService.completarTarea(idTarea);
+			return ResponseEntity.ok(tareaActualizada);
 		} catch (TareaNotFoundException e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		} catch (TareaException e) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
 		}
-		
 	}
-	
+
 	@GetMapping("/pendientes")
 	public ResponseEntity<List<Tarea>> getTareasPendientes() {
-		List<Tarea> resultado = new ArrayList<>();
-		for (Tarea tarea : tareaService.findAll()) {
-			if (tarea.getEstado() == Estado.PENDIENTE) {
-				resultado.add(tarea);
-			}
-		}
-		return ResponseEntity.ok(resultado);
+		return ResponseEntity.ok(tareaService.obtenerTareasPorEstado(Estado.PENDIENTE));
 	}
-	
+
 	@GetMapping("/en-progreso")
 	public ResponseEntity<List<Tarea>> getTareasEnProgreso() {
-		List<Tarea> resultado = new ArrayList<>();
-		for (Tarea tarea : tareaService.findAll()) {
-			if (tarea.getEstado() == Estado.EN_PROGRESO) {
-				resultado.add(tarea);
-			}
-		}
-		return ResponseEntity.ok(resultado);
+		return ResponseEntity.ok(tareaService.obtenerTareasPorEstado(Estado.EN_PROGRESO));
 	}
-	
+
 	@GetMapping("/completadas")
 	public ResponseEntity<List<Tarea>> getTareasCompletadas() {
-		List<Tarea> resultado = new ArrayList<>();
-		for (Tarea tarea : tareaService.findAll()) {
-			if (tarea.getEstado() == Estado.COMPLETADA) {
-				resultado.add(tarea);
-			}
-		}
-		return ResponseEntity.ok(resultado);
+		return ResponseEntity.ok(tareaService.obtenerTareasPorEstado(Estado.COMPLETADA));
 	}
-	
+
 	@GetMapping("/vencidas")
 	public ResponseEntity<List<Tarea>> getTareasVencidas() {
-		List<Tarea> resultado = new ArrayList<>();
-		LocalDate hoy = LocalDate.now();
-		for (Tarea tarea : tareaService.findAll()) {
-			if (tarea.getFechaVencimiento().isBefore(hoy)) {
-				resultado.add(tarea);
-			}
-		}
-		return ResponseEntity.ok(resultado);
+		return ResponseEntity.ok(tareaService.obtenerTareasVencidas());
 	}
-	
+
 	@GetMapping("/no-vencidas")
 	public ResponseEntity<List<Tarea>> getTareasNoVencidas() {
-		List<Tarea> resultado = new ArrayList<>();
-		LocalDate hoy = LocalDate.now();
-		for (Tarea tarea : tareaService.findAll()) {
-			if (tarea.getFechaVencimiento().isAfter(hoy) || tarea.getFechaVencimiento().isEqual(hoy)) {
-				resultado.add(tarea);
-			}
-		}
-		return ResponseEntity.ok(resultado);
+		return ResponseEntity.ok(tareaService.obtenerTareasNoVencidas());
 	}
-	
+
 	@GetMapping("/buscar/{titulo}")
 	public ResponseEntity<List<Tarea>> buscarPorTitulo(@PathVariable String titulo) {
-		List<Tarea> resultado = new ArrayList<>();
-		for (Tarea tarea : tareaService.findAll()) {
-			if (tarea.getTitulo().toLowerCase().contains(titulo.toLowerCase())) {
-				resultado.add(tarea);
-			}
-		}
-		return ResponseEntity.ok(resultado);
+		return ResponseEntity.ok(tareaService.buscarPorTitulo(titulo));
 	}
 }
